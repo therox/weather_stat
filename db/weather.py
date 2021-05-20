@@ -33,8 +33,8 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
 
-class Lake(Base):
-    __tablename__ = 'lake'
+class WeatherStat(Base):
+    __tablename__ = 'weather_stat'
     id = Column(Integer, primary_key=True)
     geom = Column(Geometry(geometry_type='POINT', srid=SRID))
     temp = Column(Numeric)
@@ -46,7 +46,7 @@ class Lake(Base):
         return f"Lake at {self.geom}, temp: {self.temp}"
 
 
-def save(lake: Lake):
+def save(lake: WeatherStat):
     session = Session()
     session.add(lake)
     session.commit()
@@ -55,24 +55,28 @@ def save(lake: Lake):
 def query_point(x, y: float):
     session = Session()
     try:
-        lake = session.query(Lake).filter(
+        w = session.query(WeatherStat).filter(
             func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
-                           Lake.geom.ST_Buffer(10))).one()
+                           WeatherStat.geom.ST_Buffer(10))).one()
     except:
-        print('Not Found')
         return None
 
-    print(f'\n\nFound: {lake}')
+    return w
 
     session.commit()
 
 
 if __name__ == '__main__':
     print("Ok")
-    Lake.__table__.drop(engine)
-    Lake.__table__.create(engine)
-    save(Lake(geom=f'SRID={SRID}; POINT(1 0)', temp=5, pressure=12, humidity=12.6, date=datetime.datetime.now()))
-    save(Lake(geom=f'SRID={SRID}; POINT(100 20)', temp=6, pressure=123, humidity=78, date=datetime.datetime.now()))
+
+    WeatherStat.__table__.drop(engine, checkfirst=True)
+    WeatherStat.__table__.create(engine)
+    save(WeatherStat(geom=f'SRID={SRID}; POINT(1 0)', temp=5, pressure=12, humidity=12.6, date=datetime.datetime.now()))
+    save(WeatherStat(geom=f'SRID={SRID}; POINT(100 100)', temp=6, pressure=123, humidity=78, date=datetime.datetime.now()))
 
     # лезем в БД
-    query_point(7, 5)
+    k = query_point(92, 93)
+    if k:
+        print('Found: ', k)
+    else:
+        print('Not Found. Requesting api')
