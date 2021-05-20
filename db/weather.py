@@ -1,6 +1,14 @@
-import psycopg2
-from psycopg2 import sql
+import datetime
 
+import psycopg2
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, Numeric, Date
+from geoalchemy2 import Geometry, WKTElement
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
+
+SRID = 4396
 # Таблица weather, состоящая из следующих колонок:
 # 1) geom        - геометрия
 # 2) temperature - температура
@@ -19,28 +27,52 @@ from psycopg2 import sql
 #     date       date
 # );
 
-conn = psycopg2.connect(dbname='weather_stat',
-                        user='postgres',
-                        password='postgres',
-                        host='localhost')
-cursor = conn.cursor()
 
-cursor.execute(
-    "INSERT INTO weather (geom, temp, pressure, humidity, date) VALUES ('SRID=4326;POINT (1 2)', 24, 765.3, 46, now())"
-)
+engine = create_engine('postgresql://postgres:postgres@localhost/weather', echo=True)
+Base = declarative_base()
+Session = sessionmaker(bind=engine)
 
-with conn.cursor() as cursor:
-    columns = ('id', 'geom', 'pressure', 'humidity', 'date')
-    stmt = sql.SQL('SELECT {} FROM {} LIMIT 5').format(
-        sql.SQL(',').join(map(sql.Identifier, columns)),
-        sql.Identifier('weather'))
-    cursor.execute(stmt)
-    for row in cursor:
-        print(row)
 
-# cursor.execute('SELECT * FROM weather LIMIT 10')
-# records = cursor.fetchall()
-# print(records[0])
+class Lake(Base):
+    __tablename__ = 'lake'
+    id = Column(Integer, primary_key=True)
+    geom = Column(Geometry(geometry_type='POINT', srid=SRID))
+    temp = Column(Numeric)
+    pressure = Column(Numeric)
+    humidity = Column(Numeric)
+    date = Column(Date, default=datetime.datetime)
 
-# cursor.close()
-# conn.close()
+    def __str__(self):
+        return f"Lake at {self.geom}, temp: {self.temp}"
+
+
+def save(lake: Lake):
+    session = Session()
+    session.add(lake)
+    session.commit()
+
+
+def query_point(x, y: float):
+    session = Session()
+    try:
+        lake = session.query(Lake).filter(
+            func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
+                           Lake.geom.ST_Buffer(10))).one()
+    except:
+        print('Not Found')
+        return None
+
+    print(f'\n\nFound: {lake}')
+
+    session.commit()
+
+
+if __name__ == '__main__':
+    print("Ok")
+    Lake.__table__.drop(engine)
+    Lake.__table__.create(engine)
+    save(Lake(geom=f'SRID={SRID}; POINT(1 0)', temp=5, pressure=12, humidity=12.6, date=datetime.datetime.now()))
+    save(Lake(geom=f'SRID={SRID}; POINT(100 20)', temp=6, pressure=123, humidity=78, date=datetime.datetime.now()))
+
+    # лезем в БД
+    query_point(7, 5)
