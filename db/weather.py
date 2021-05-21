@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Numeric, Date
 from geoalchemy2 import Geometry, WKTElement
+from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
 
@@ -27,8 +28,8 @@ SRID = 4396
 #     date       date
 # );
 
-
-engine = create_engine('postgresql://postgres:postgres@localhost/weather', echo=True)
+engine = create_engine('postgresql://postgres:postgres@localhost/weather',
+                       echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
@@ -52,7 +53,7 @@ def save(lake: WeatherStat):
     session.commit()
 
 
-def query_point(x, y: float)->WeatherStat:
+def query_point(x, y: float) -> WeatherStat:
     session = Session()
     try:
         w = session.query(WeatherStat).filter(
@@ -60,24 +61,31 @@ def query_point(x, y: float)->WeatherStat:
                            WeatherStat.geom.ST_Buffer(10))).one()
     except:
         return None
-
     return w
-
-    session.commit()
 
 
 if __name__ == '__main__':
     print("Ok")
-
     WeatherStat.__table__.drop(engine, checkfirst=True)
+
     WeatherStat.__table__.create(engine)
-    save(WeatherStat(geom=f'SRID={SRID}; POINT(1 0)', temp=5, pressure=12, humidity=12.6, date=datetime.datetime.now()))
-    save(WeatherStat(geom=f'SRID={SRID}; POINT(100 100)', temp=6, pressure=123, humidity=78, date=datetime.datetime.now()))
+    save(
+        WeatherStat(geom=f'SRID={SRID}; POINT(1 0)',
+                    temp=5,
+                    pressure=12,
+                    humidity=12.6,
+                    date=datetime.datetime.now()))
+    save(
+        WeatherStat(geom=f'SRID={SRID}; POINT(100 100)',
+                    temp=6,
+                    pressure=123,
+                    humidity=78,
+                    date=datetime.datetime.now()))
 
     # лезем в БД
     k = query_point(93, 93)
     if k:
         print('Found: ', k)
-        print(k.geom.lat())
+        print(to_shape(k.geom))
     else:
         print('Not Found. Requesting api')
