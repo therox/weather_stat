@@ -1,7 +1,7 @@
 from pyproj import Proj, transform
 import requests
 import datetime
-from db.weather import WeatherStat
+from db import WeatherStat
 
 
 def getHistoricalData(x, y: float, date_start, date_end: str, key: str):

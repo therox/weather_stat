@@ -38,17 +38,19 @@ class WeatherStat(Base):
     id = Column(Integer, primary_key=True)
     geom = Column(Geometry(geometry_type='POINT', srid=SRID))
     temp = Column(Numeric)
+    tempmax = Column(Numeric)
+    tempmin = Column(Numeric)
     pressure = Column(Numeric)
     humidity = Column(Numeric)
     date = Column(Date, default=datetime.datetime)
 
     def __str__(self):
-        return f"Lake at {self.geom}, temp: {self.temp}"
+        return f"WeatherStat at {to_shape(self.geom)}, temp: {self.temp}"
 
 
-def save(lake: WeatherStat):
+def save(ws: WeatherStat):
     session = Session()
-    session.add(lake)
+    session.add(ws)
     session.commit()
 
 
@@ -73,24 +75,30 @@ if __name__ == '__main__':
     save(
         WeatherStat(geom=f'SRID={SRID}; POINT(1 0)',
                     temp=5,
+                    tempmax=9,
+                    tempmin=-1,
                     pressure=12,
                     humidity=12.6,
                     date=datetime.datetime.now()))
     save(
         WeatherStat(geom=f'SRID={SRID}; POINT(100 100)',
                     temp=6,
+                    tempmax=10,
+                    tempmin=-1,
                     pressure=123,
                     humidity=78,
                     date=datetime.datetime.now()))
     save(
         WeatherStat(geom=f'SRID={SRID}; POINT(30000 30000)',
                     temp=6,
+                    tempmax=13,
+                    tempmin=3,
                     pressure=123,
                     humidity=78,
                     date=datetime.datetime.now()))
 
     # лезем в БД
-    x, y = 100, 90
+    x, y = 100, 100
     k = query_point(x, y)
     if k:
         print('Found: ', k)
