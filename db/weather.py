@@ -7,6 +7,7 @@ from geoalchemy2 import Geometry, WKTElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, select
+from pyproj import Proj, transform
 
 SRID = 4396
 # Таблица weather, состоящая из следующих колонок:
@@ -59,11 +60,6 @@ def query_point(x, y: float) -> WeatherStat:
         w = session.query(WeatherStat).filter(
             func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
                            WeatherStat.geom.ST_Buffer(10))).one()
-        print('Ищем данные для точки ', to_shape(w.geom))
-        g = engine.scalar(
-            select([func.ST_Transform(WeatherStat.geom,
-                                      4326)]).where(WeatherStat.id == w.id))
-        print('Нашли и трансформировали -> ', to_shape(g))
     except Exception as e:
         print(e)
         return None
@@ -95,13 +91,16 @@ if __name__ == '__main__':
                     date=datetime.datetime.now()))
 
     # лезем в БД
-    k = query_point(30000, 30008)
+    x, y = 100, 90
+    k = query_point(x, y)
     if k:
         print('Found: ', k)
         print(to_shape(k.geom))
-        z = func.ST_Transform(k.geom, 4326, type=Geometry(srid=4326))
-        print(z)
-
         # select([func.ST_Transform(obj.c.geom, 2154)]).where(obj.c.id == 1))
     else:
         print('Not Found. Requesting api')
+        print(f"Converting POINT(4396) to POINT(4326)")
+        inProj = Proj('epsg:4396')
+        outProj = Proj('epsg:4326')
+        lon, lat = transform(inProj, outProj, x, y, always_xy=True)
+        print(f'-> Получили POINT({lon}, {lat})')
