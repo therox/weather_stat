@@ -61,7 +61,7 @@ def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
         w = session.query(WeatherStat).filter(
             func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
                            WeatherStat.geom.ST_Buffer(10)),
-            WeatherStat.date >= d_start, WeatherStat.date <= d_end)
+            WeatherStat.date >= d_start, WeatherStat.date <= d_end).order_by(WeatherStat.date.asc())
     except Exception as e:
         print(e)
         return None
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                     date=datetime.datetime.now()))
 
     # лезем в БД
-    x, y = 100, 100
+    x, y = 95, 95
     k_list = query_point(x, y, datetime.datetime.now().date(), datetime.datetime.now().date())
     found = []
     if k_list:
@@ -106,6 +106,5 @@ if __name__ == '__main__':
             print('ok')
             found.append(k)
         print(f'Всего найдено {len(found)} записей в БД')
-        # select([func.ST_Transform(obj.c.geom, 2154)]).where(obj.c.id == 1))
     else:
         print('Not Found. Requesting api')
