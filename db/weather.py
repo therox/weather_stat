@@ -52,7 +52,7 @@ def save(lake: WeatherStat):
     session.commit()
 
 
-def query_point(x, y: float):
+def query_point(x, y: float)->WeatherStat:
     session = Session()
     try:
         w = session.query(WeatherStat).filter(
@@ -75,8 +75,9 @@ if __name__ == '__main__':
     save(WeatherStat(geom=f'SRID={SRID}; POINT(100 100)', temp=6, pressure=123, humidity=78, date=datetime.datetime.now()))
 
     # лезем в БД
-    k = query_point(92, 93)
+    k = query_point(93, 93)
     if k:
         print('Found: ', k)
+        print(k.geom.lat())
     else:
         print('Not Found. Requesting api')
