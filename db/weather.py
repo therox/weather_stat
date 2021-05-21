@@ -6,8 +6,7 @@ from sqlalchemy import Column, Integer, Numeric, Date
 from geoalchemy2 import Geometry, WKTElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func, select
-from pyproj import Proj, transform
+from sqlalchemy import func
 
 SRID = 4396
 # Таблица weather, состоящая из следующих колонок:
@@ -99,8 +98,3 @@ if __name__ == '__main__':
         # select([func.ST_Transform(obj.c.geom, 2154)]).where(obj.c.id == 1))
     else:
         print('Not Found. Requesting api')
-        print(f"Converting POINT(4396) to POINT(4326)")
-        inProj = Proj('epsg:4396')
-        outProj = Proj('epsg:4326')
-        lon, lat = transform(inProj, outProj, x, y, always_xy=True)
-        print(f'-> Получили POINT({lon}, {lat})')
