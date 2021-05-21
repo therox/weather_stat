@@ -22,3 +22,8 @@ def weather():
     if d_start > d_end:
         d_start, d_end = d_end, d_start
     return f'Получена точка POINT({x} {y}, дата начала: {d_start.strftime("%d-%m-%Y")}, дата окончания: {d_end.strftime("%d-%m-%Y")})'
+
+
+if __name__ == "__main__":
+    app.run()
+    #app.run(host='0.0.0.0')
