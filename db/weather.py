@@ -1,13 +1,12 @@
 import datetime
 
-import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Numeric, Date
 from geoalchemy2 import Geometry, WKTElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 SRID = 4396
 # Таблица weather, состоящая из следующих колонок:
@@ -56,10 +55,17 @@ def save(lake: WeatherStat):
 def query_point(x, y: float) -> WeatherStat:
     session = Session()
     try:
+        print(1)
         w = session.query(WeatherStat).filter(
             func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
                            WeatherStat.geom.ST_Buffer(10))).one()
-    except:
+        print('Ищем данные для точки ', to_shape(w.geom))
+        g = engine.scalar(
+            select([func.ST_Transform(WeatherStat.geom,
+                                      4326)]).where(WeatherStat.id == w.id))
+        print('Нашли и трансформировали -> ', to_shape(g))
+    except Exception as e:
+        print(e)
         return None
     return w
 
@@ -81,11 +87,21 @@ if __name__ == '__main__':
                     pressure=123,
                     humidity=78,
                     date=datetime.datetime.now()))
+    save(
+        WeatherStat(geom=f'SRID={SRID}; POINT(30000 30000)',
+                    temp=6,
+                    pressure=123,
+                    humidity=78,
+                    date=datetime.datetime.now()))
 
     # лезем в БД
-    k = query_point(93, 93)
+    k = query_point(30000, 30008)
     if k:
         print('Found: ', k)
         print(to_shape(k.geom))
+        z = func.ST_Transform(k.geom, 4326, type=Geometry(srid=4326))
+        print(z)
+
+        # select([func.ST_Transform(obj.c.geom, 2154)]).where(obj.c.id == 1))
     else:
         print('Not Found. Requesting api')
