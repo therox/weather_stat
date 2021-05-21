@@ -42,7 +42,7 @@ class WeatherStat(Base):
     tempmin = Column(Numeric)
     pressure = Column(Numeric)
     humidity = Column(Numeric)
-    date = Column(Date, default=datetime.datetime)
+    date = Column(Date, default=datetime.datetime.now())
 
     def __str__(self):
         return f"WeatherStat at {to_shape(self.geom)}, temp: {self.temp}"
@@ -54,13 +54,14 @@ def save(ws: WeatherStat):
     session.commit()
 
 
-def query_point(x, y: float) -> WeatherStat:
+def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
     session = Session()
+    print(f"Ищем точки вблизи POINT({x}, {y}) на даты c {d_start.strftime('%d-%m-%Y')} по {d_end.strftime('%d-%m-%Y')}")
     try:
-        print(1)
         w = session.query(WeatherStat).filter(
             func.ST_Within(WKTElement(f'POINT({x} {y})', srid=SRID),
-                           WeatherStat.geom.ST_Buffer(10))).one()
+                           WeatherStat.geom.ST_Buffer(10)),
+            WeatherStat.date >= d_start, WeatherStat.date <= d_end)
     except Exception as e:
         print(e)
         return None
@@ -68,7 +69,6 @@ def query_point(x, y: float) -> WeatherStat:
 
 
 if __name__ == '__main__':
-    print("Ok")
     WeatherStat.__table__.drop(engine, checkfirst=True)
 
     WeatherStat.__table__.create(engine)
@@ -99,10 +99,13 @@ if __name__ == '__main__':
 
     # лезем в БД
     x, y = 100, 100
-    k = query_point(x, y)
-    if k:
-        print('Found: ', k)
-        print(to_shape(k.geom))
+    k_list = query_point(x, y, datetime.datetime.now().date(), datetime.datetime.now().date())
+    found = []
+    if k_list:
+        for k in k_list:
+            print('ok')
+            found.append(k)
+        print(f'Всего найдено {len(found)} записей в БД')
         # select([func.ST_Transform(obj.c.geom, 2154)]).where(obj.c.id == 1))
     else:
         print('Not Found. Requesting api')
