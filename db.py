@@ -7,7 +7,6 @@ from geoalchemy2 import Geometry, WKTElement
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
-import simplejson
 
 SRID = 4396
 # Таблица weather, состоящая из следующих колонок:
@@ -45,8 +44,18 @@ class WeatherStat(Base):
     humidity = Column(Numeric)
     date = Column(Date, default=datetime.datetime.now())
 
+    def from_dict(data: dict):
+        print("Получили словарь: ", data)
+        return WeatherStat(geom=data['geom'],
+                           temp=data['temp'],
+                           tempmax=data['tempmax'],
+                           tempmin=data['tempmin'],
+                           pressure=data['pressure'],
+                           humidity=data['humidity'],
+                           date=data['date'])
+
     def __str__(self):
-        return f"WeatherStat at {to_shape(self.geom)}, temp: {self.temp} for {self.date.strftime('%d-%m-%Y')}"
+        return f"WeatherStat at {self.geom}, temp: {self.temp} for {self.date.strftime('%d-%m-%Y')}"
 
     def as_dict(self):
         return {
@@ -89,7 +98,8 @@ def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
 
 def create_fixtures():
     # Москва в 4396
-    x, y = -3833198.53891, 4587860.74166
+    # x, y = -3833198.53891, 4587860.74166
+    x, y = -3833198.5389, 4587860.7416
 
     save(
         WeatherStat(geom=f'SRID={SRID}; POINT({x} {y})',
