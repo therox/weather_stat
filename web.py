@@ -39,7 +39,7 @@ def getHistoricalData(x, y: float, date_start, date_end: str, key: str):
 
         d = [{
             'geom':
-            f'SRID={SRID}; POINT({x} {y})',
+            f'SRID={SRID}; POINT({round(float(x), 4)} {round(float(y), 4)})',
             'temp':
             float(z['temp']),
             'tempmax':
