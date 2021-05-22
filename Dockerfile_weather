@@ -1,0 +1,5 @@
+FROM fedora
+
+COPY *.py *.txt *.sh *.ini /app/
+
+RUN dnf update -y && dnf install -y postgresql python3 python3-pip libpq-devel gcc python3-devel python3-requests
