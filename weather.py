@@ -50,7 +50,7 @@ def weather():
             hd = getHistoricalData(x, y, d_start, d_end,
                                    'C99LPDXEB4A6UR3J3T6F9CB4S')
             # Получили данные, теперь идём по всем данным и новые сохраняем в БД и добавляем к предыдущему результату
-            # Проходимся по всем данным
+            # Проходимся по всем датам
             for dat1 in (d_start + datetime.timedelta(n)
                          for n in range((d_end - d_start).days + 1)):
                 # Смотрим, есть ли данные за эту дату в результатах
@@ -59,14 +59,14 @@ def weather():
                                 None)
                 if ws_found is None:
                     print('Not found. Searching in API results')
-                    # Ищем то же самое в найденном
+                    # Ищем то же самое в найденном в интырнете
                     web_res = next(
                         (item for item in hd if item['date'] == dat1.date()),
                         None)
                     if web_res is not None:
+                        # Сохраняем в БД
                         print('Saving to DB')
                         save(WeatherStat.from_dict(web_res))
-                        continue
                     else:
                         print('Not found at all')
     # Еще разок запрашиваем данные из БД
