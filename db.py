@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Numeric, Date
@@ -27,8 +28,18 @@ SRID = 4396
 #     date       date
 # );
 
-engine = create_engine('postgresql://postgres:postgres@localhost/weather',
-                       echo=True)
+pg_host = 'localhost'
+env_pg_host = os.getenv('PG_HOST')
+if env_pg_host != None:
+    pg_host = env_pg_host
+
+pg_password = 'postgres'
+env_pg_password = os.getenv('PGPASSWORD')
+if env_pg_password != None:
+    pg_password = env_pg_password
+
+engine = create_engine(
+    f'postgresql://postgres:{pg_password}@{pg_host}/weather', echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
@@ -45,7 +56,7 @@ class WeatherStat(Base):
     date = Column(Date, default=datetime.datetime.now())
 
     def from_dict(data: dict):
-        print("Получили словарь: ", data)
+        print("Got dict: ", data)
         return WeatherStat(geom=data['geom'],
                            temp=data['temp'],
                            tempmax=data['tempmax'],
@@ -82,7 +93,7 @@ def save(ws: WeatherStat):
 def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
     session = Session()
     print(
-        f"Ищем точки вблизи POINT({x}, {y}) на даты c {d_start.strftime('%d-%m-%Y')} по {d_end.strftime('%d-%m-%Y')}"
+        f"Searching for points near POINT({x}, {y}) from {d_start.strftime('%d-%m-%Y')} to {d_end.strftime('%d-%m-%Y')}"
     )
     try:
         w = session.query(WeatherStat).filter(
@@ -159,7 +170,6 @@ if __name__ == '__main__':
 
         for k in k_list:
             found.append(k.as_dict())
-        print(f'Всего найдено {len(found)} записей в БД')
         print(json.dumps(found))
     else:
         print('Not Found. Requesting api')

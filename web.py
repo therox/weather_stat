@@ -12,18 +12,18 @@ def getHistoricalData(x, y: float, date_start, date_end: str, key: str):
     print("Получили: ", lon, lat)
     try:
         # https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/52.06%2C-2.72/2018-2-4/2018-2-6?unitGroup=metric&key=
-        print("Отправляем реквест")
+        print("Send request")
         u = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{lon}%2C{lat}/{date_start.strftime('%Y-%m-%d')}/{date_end.strftime('%Y-%m-%d')}"
         print(u)
         res = requests.get(u, params={'unitGroup': "metric", 'key': key})
         if res.status_code != 200:
             print(res.text)
             return
-        print('Получили следующий документ: ', res.text)
+        print('Got: ', res.text)
         data = res.json()
 
         # print("Получили дней: ", len(data['days']))
-        print("Парсим данные")
+        print("Parsing")
         # tempmax, tempmin, temp, humidity, pressure, datetime('%Y-%d-%m')
 
         for kk in data['days']:

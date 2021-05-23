@@ -1,15 +1,13 @@
 #!/bin/sh
 
-#Запускаем постгрес
-#su - docker -c "/usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf"
-cd /app
-# uwsgi --socket 0.0.0.0:5000 --protocol=http -w wsgi:app
-env LANG=en_US.utf8
-env LC_ALL=en_US.UTF-8
-env LC_LANG=en_US.UTF-8
+su - -c "export PG_HOST=${PG_HOST}; export PGPASSWORD=${PGPASSWORD}; cd /app; uwsgi --ini wsgi.ini"
 
-uwsgi --ini wsgi.ini
-# http://127.0.0.1:5000/?x=2&y=3&start=1-2-2021&end=1-2-2001
+# Пример запроса:
+# http://127.0.0.1:9090/?x=-3833188.53891&y=4587860.74166&start=13-05-2021&end=20-5-2021
 
-# Запуск докера: podman run -it --rm -p 9090:9090 weather
-# Запуск докера с постгисом: podman run --name some-postgis -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgis/postgis
+# Запуск докера с постгисом: 
+# > podman run --name postgis -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgis/postgis
+# Запуск докера для создания БД: 
+# > podman run -it --rm -e PG_HOST=10.10.10.3 -e PGPASSWORD=postgres -p 9090:9090 weather sh /app/create_db.sh
+# Запуск докера: 
+# > podman run -it --rm -e PG_HOST=10.10.10.3 -e PGPASSWORD=postgres -p 9090:9090 weather
