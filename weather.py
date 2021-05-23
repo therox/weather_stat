@@ -9,6 +9,18 @@ app = Flask(__name__)
 
 @app.route('/')
 def weather():
+    """
+    Получение погоды
+
+    Параметры:
+    ----------
+    x, y : float
+        координаты точки в метрах
+    start, end : str
+        начало и конец периода в формате ДД-ММ-ГГГГ
+    """
+
+    # Конвертируем входные параметры в правильный формат
     x = request.args.get('x')
     y = request.args.get('y')
     start = request.args.get('start')
@@ -69,6 +81,9 @@ def weather():
 
 
 def ws_list_to_dict_list(ws_list: list[WeatherStat]) -> list[dict]:
+    """
+    Конвертируем массив WeatherStat в словарь для выдачи клиенту
+    """
     found = []
     for ws in ws_list:
         found.append(ws.as_dict())

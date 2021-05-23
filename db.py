@@ -9,25 +9,10 @@ from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
 
+# Идентификатор проекции
 SRID = 4396
-# Таблица weather, состоящая из следующих колонок:
-# 1) geom        - геометрия
-# 2) temperature - температура
-# 3) pressure    - Давление
-# 4) humidity    - Влажность
-# 5) date        - дата
 
-# SRID=4326;POINT (1 2)
-
-# CREATE TABLE weather (
-#     id         serial PRIMARY KEY,
-#     geom       GEOMETRY NOT NULL,
-#     temp       numeric NOT NULL,
-#     pressure   numeric NOT NULL,
-#     humidity   numeric NOT NULL,
-#     date       date
-# );
-
+# Получаем из окружения хост и пароль для доступа к postgreSQL
 pg_host = 'localhost'
 env_pg_host = os.getenv('PG_HOST')
 if env_pg_host != None:
@@ -38,6 +23,7 @@ env_pg_password = os.getenv('PGPASSWORD')
 if env_pg_password != None:
     pg_password = env_pg_password
 
+# Создаём связь алхимии с постгресом
 engine = create_engine(
     f'postgresql://postgres:{pg_password}@{pg_host}/weather', echo=True)
 Base = declarative_base()
@@ -45,6 +31,7 @@ Session = sessionmaker(bind=engine)
 
 
 class WeatherStat(Base):
+    """Основной класс, представляющий работу с таблицей со погодной сводкой"""
     __tablename__ = 'weather_stat'
     id = Column(Integer, primary_key=True)
     geom = Column(Geometry(geometry_type='POINT', srid=SRID))
@@ -78,19 +65,24 @@ class WeatherStat(Base):
             'humidity': float(self.humidity),
             'date': self.date.strftime('%d-%m-%Y')
         }
-        # return {
-        #     c.name: getattr(self, c.name)
-        #     for c in self.__table__.columns if c.name != 'geom'
-        # }
 
 
 def save(ws: WeatherStat):
+    """Функция сохранения записи в БД"""
     session = Session()
     session.add(ws)
     session.commit()
 
 
 def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
+    """Запрос к БД
+    Параметры:
+    ----------
+    x, y : float
+        Координаты точки
+    d_start, d_end : datetime
+        Даты начала и конца периода запроса
+    """
     session = Session()
     print(
         f"Searching for points near POINT({x}, {y}) from {d_start.strftime('%d-%m-%Y')} to {d_end.strftime('%d-%m-%Y')}"
@@ -108,6 +100,16 @@ def query_point(x, y: float, d_start, d_end: datetime) -> WeatherStat:
 
 
 def create_fixtures():
+    """
+    Создание фикстур
+
+    Параметры:
+    ----------
+    x, y : float
+        Координаты точки
+    d_start, d_end : datetime
+        Даты начала и конца периода запроса
+    """
     # Москва в 4396
     # x, y = -3833198.53891, 4587860.74166
     x, y = -3833198.5389, 4587860.7416
@@ -159,17 +161,3 @@ if __name__ == '__main__':
 
     WeatherStat.__table__.create(engine)
     create_fixtures()
-
-    x, y = -3833198.53891, 4587860.74166
-    k_list = query_point(
-        x, y,
-        datetime.datetime.now().date() - datetime.timedelta(days=7),
-        datetime.datetime.now().date())
-    found = []
-    if k_list:
-
-        for k in k_list:
-            found.append(k.as_dict())
-        print(json.dumps(found))
-    else:
-        print('Not Found. Requesting api')

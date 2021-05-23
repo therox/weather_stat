@@ -5,6 +5,18 @@ from db import WeatherStat, SRID
 
 
 def getHistoricalData(x, y: float, date_start, date_end: str, key: str):
+    """
+    Получение данных от visualcrossing.com
+
+    Параметры:
+    ----------
+    x, y : float
+        Координаты точки в метрах
+    date_start, date_end: str
+        Даты начала и конца периода в формате ДД-ММ-ГГГГ
+    key : str
+        API-ключ для работы с visualcrossing.com
+    """
     print(f"Converting POINT(4396) to POINT(4326)")
     inProj = Proj('epsg:4396')
     outProj = Proj('epsg:4326')
@@ -24,18 +36,6 @@ def getHistoricalData(x, y: float, date_start, date_end: str, key: str):
 
         # print("Получили дней: ", len(data['days']))
         print("Parsing")
-        # tempmax, tempmin, temp, humidity, pressure, datetime('%Y-%d-%m')
-
-        for kk in data['days']:
-            print(f'GEOM: SRID={SRID}; POINT({x} {y})')
-            print(f'TEMP: {float(kk["temp"])}')
-            print(f'TEMPMAX: {float(kk["tempmax"])}')
-            print(f'TEMPMIN: {float(kk["tempmin"])}')
-            print(f'PRESSURE: {float(kk["pressure"])}')
-            print(f'HUMIDITY: {float(kk["humidity"])}')
-            print(
-                f'DATE: {datetime.datetime.strptime(kk["datetime"], "%Y-%m-%d").date()}'
-            )
 
         d = [{
             'geom':
