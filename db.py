@@ -15,12 +15,12 @@ SRID = 4396
 # Получаем из окружения хост и пароль для доступа к postgreSQL
 pg_host = 'localhost'
 env_pg_host = os.getenv('PG_HOST')
-if env_pg_host != None:
+if env_pg_host != '':
     pg_host = env_pg_host
 
 pg_password = 'postgres'
 env_pg_password = os.getenv('PGPASSWORD')
-if env_pg_password != None:
+if env_pg_password != '':
     pg_password = env_pg_password
 
 # Создаём связь алхимии с постгресом

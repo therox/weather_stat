@@ -1,11 +1,18 @@
 import datetime
 import json
+import os
+
 from web import getHistoricalData
 from db import WeatherStat, query_point, save
 from flask import Flask, request, Response
 
 app = Flask(__name__)
+api_key = 'C99LPDXEB4A6UR3J3T6F9CB4S'
+env_api_key = os.getenv('API_KEY')
 
+if env_api_key != '':
+    api_key = env_api_key
+print('Using API-KEY: ', api_key)
 
 @app.route('/')
 def weather():
@@ -19,7 +26,7 @@ def weather():
     start, end : str
         начало и конец периода в формате ДД-ММ-ГГГГ
     """
-
+    print("Ok, we've got a job")
     # Конвертируем входные параметры в правильный формат
     x = request.args.get('x')
     y = request.args.get('y')
@@ -37,7 +44,8 @@ def weather():
     if d_start > d_end:
         d_start, d_end = d_end, d_start
     print(
-        f'Got POINT({round(float(x), 4)} {round(float(y), 4)}, start date: {d_start.strftime("%d-%m-%Y")}, end_date: {d_end.strftime("%d-%m-%Y")})'
+        f'Got POINT({round(float(x), 4)} {round(float(y), 4)}, start date: {d_start.strftime("%d-%m-%Y")}, '
+        f'end_date: {d_end.strftime("%d-%m-%Y")})'
     )
     # Запрашиваем БД на предмет заданных данных
     k_list = query_point(x, y, d_start, d_end)
@@ -47,8 +55,11 @@ def weather():
 
         if len(found) < (d_end - d_start).days + 1:
             # К нам пришли не все данные запускаем вытаскиваетель данных с сайта
-            hd = getHistoricalData(x, y, d_start, d_end,
-                                   'C99LPDXEB4A6UR3J3T6F9CB4S')
+            print("Using API_KEY: ", api_key)
+            hd, err = getHistoricalData(x, y, d_start, d_end,
+                                   api_key)
+            if err is not None:
+                return err
             # Получили данные, теперь идём по всем данным и новые сохраняем в БД и добавляем к предыдущему результату
             # Проходимся по всем датам
             for dat1 in (d_start + datetime.timedelta(n)

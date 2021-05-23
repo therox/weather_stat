@@ -1,6 +1,6 @@
 #!/bin/sh
 
-su - -c "export PG_HOST=${PG_HOST}; export PGPASSWORD=${PGPASSWORD}; cd /app; uwsgi --ini wsgi.ini"
+su - -c "export PG_HOST=${PG_HOST}; export PGPASSWORD=${PGPASSWORD}; export API_KEY=${API_KEY}; cd /app; uwsgi --ini wsgi.ini"
 
 # Пример запроса:
 # http://127.0.0.1:9090/?x=-3833188.53891&y=4587860.74166&start=13-05-2021&end=20-5-2021
