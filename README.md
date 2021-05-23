@@ -32,15 +32,15 @@
 > docker build -t weather -f Dockerfile_weather
 
 Запускаем docker с postgis: 
-> podman run --name postgis -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgis/postgis
+> docker run --name postgis -p 5432:5432 -e POSTGRES_PASSWORD=`postgres` -d postgis/postgis
 
 Запуск докера с задачей в режиме создания БД и таблицы: 
-> podman run -it --rm -e PG_HOST=10.10.10.3 -e PGPASSWORD=postgres -p 9090:9090 weather sh /app/create_db.sh
+> docker run -it --rm -e PG_HOST=`10.10.10.3` -e PGPASSWORD=`postgres` -p 9090:9090 weather sh /app/create_db.sh
 
 ## Работа
 
 Запускаем докер с задачей
-> podman run -it --rm -e PG_HOST=10.10.10.3 -e PGPASSWORD=postgres -p 9090:9090 weather
+> docker run -it --rm -e PG_HOST=`10.10.10.3` -e PGPASSWORD=`postgres` -p 9090:9090 weather
 
 Идём в браузер и пробуем достучаться до API следующим запросом (в примере указаны данные Москвы):
 > http://127.0.0.1:9090/?x=-3833188.53891&y=4587860.74166&start=21-05-2021&end=23-5-2021
